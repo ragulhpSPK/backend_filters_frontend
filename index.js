@@ -86,7 +86,7 @@ app.get("/subcat", async (req, res) => {
   try {
     const result = isEmpty(req.query.q)
       ? await Subcategory.find().populate("category")
-      : await Product.find({ category: req.query.q });
+      : await Subcategory.find({ category: req.query.q });
     res.send(result);
   } catch (e) {
     console.log(e);
@@ -123,20 +123,26 @@ app.post("/createPro", async (req, res) => {
 
 app.get("/getpro", async (req, res) => {
   try {
-    console.log(req.query);
-    const { q, sub } = req.query;
+    const { q, sub, search } = req.query;
     let where = {};
 
     if (q !== "") {
       where.category = q;
+      where.name = { $regex: search, $options: "i" };
     }
+    if (q === "" && search !== "") {
+      where.name = { $regex: search, $options: "i" };
+    }
+
     if (sub !== "") {
       where.subcategory = sub;
+      where.category = q;
+      where.name = { $regex: search, $options: "i" };
     }
     console.log(where);
     const result = await Product.find(where).populate("category subcategory");
 
-    // console.log(result, "result");
+    console.log(result, "result");
     return res.status(200).send(result);
   } catch (e) {
     console.log(e);
